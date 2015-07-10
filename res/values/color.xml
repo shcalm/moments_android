@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="title_background">#3BAFDA</color>
+    <color name="white">#ffffff</color>
+    <color name="black">#000000</color>
+    <color name="lightgary">#EEEEEE</color>
+    <color name="gary">#3D3D3F</color>
+    <color name="ll_background">#ADADAD</color>
+    <color name="bantouming">#7fffffff</color>
+    <color name="touming">#00000000</color>
+    <color name="transparent">#00000000</color>
+    <color name="gold">#b89766</color>
+    <color name="textcolor_gray">#969696</color>
+    <color name="micro_list_ignore">#8593B0</color>
+    <color name="background">#DEDEDE</color>
+</resources>
