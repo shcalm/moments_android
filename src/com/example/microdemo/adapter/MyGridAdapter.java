@@ -62,6 +62,7 @@ public class MyGridAdapter extends BaseAdapter {
 		});
 		
 		ImageLoader.getInstance().displayImage(url, viewHolder.imageView);
+		
 
 		return convertView;
 	}

@@ -62,7 +62,7 @@ public class MainActivity extends Activity {
 	String ownerres="";
 	static String encoding = null; 
 	static{
-		encoding = Base64.encodeToString(new String("123:e10adc3949ba59abbe56e057f20f883e").getBytes(), Base64.DEFAULT);
+		encoding = Base64.encodeToString(new String("123:e10adc3949ba59abbe56e057f20f883e").getBytes(), Base64.NO_WRAP);
 	}
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -168,7 +168,7 @@ public class MainActivity extends Activity {
 				FirendsMicro fm=FastjsonUtil.json2object(result, FirendsMicro.class);
 				FirendMicroList fList=fm.getFriendPager();
 				
-				if("0".equals(fm.getError())){
+				{
 					
 					if(i==0){
 						listdatas.clear();
@@ -202,7 +202,10 @@ public class MainActivity extends Activity {
 				
 				HttpGet httpget = new HttpGet(params[0]);
 				//HttpPost httppost = new HttpPost("http://moments.daoapp.io/api/v1.0/posts/");
+				httpget.setHeader("user-agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:23.0) Gecko/20100101 Firefox/23.0");
 				httpget.setHeader("Authorization", "Basic " + encoding);
+				
+				
 				String result = null;
 				try {
 					HttpResponse response = client.execute(httpget);

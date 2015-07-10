@@ -2,10 +2,24 @@ package com.example.testpic;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.ParseException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.FileEntity;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.example.microdemo.R;
+import com.example.microdemo.util.FastjsonUtil;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -18,11 +32,14 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
+import android.util.Base64;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,6 +51,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -47,7 +65,11 @@ public class PublishedActivity extends Activity
 	private GridView noScrollgridview;
 	private GridAdapter adapter;
 	private TextView activity_selectimg_send;
-
+	private EditText newPostEt;
+	static String encoding = null; 
+	static{
+		encoding = Base64.encodeToString(new String("123:e10adc3949ba59abbe56e057f20f883e").getBytes(), Base64.NO_WRAP);
+	}
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
@@ -57,6 +79,7 @@ public class PublishedActivity extends Activity
 
 	public void Init()
 	{
+		newPostEt = (EditText) findViewById(R.id.makepost);
 		noScrollgridview = (GridView) findViewById(R.id.noScrollgridview);
 		noScrollgridview.setSelector(new ColorDrawable(Color.TRANSPARENT));
 		adapter = new GridAdapter(this);
@@ -86,21 +109,115 @@ public class PublishedActivity extends Activity
 
 			public void onClick(View v)
 			{
-				List<String> list = new ArrayList<String>();
-				for (int i = 0; i < Bimp.drr.size(); i++)
-				{
-					String Str = Bimp.drr.get(i).substring(
-							Bimp.drr.get(i).lastIndexOf("/") + 1,
-							Bimp.drr.get(i).lastIndexOf("."));
-					list.add(FileUtils.SDPATH + Str + ".JPEG");
-				}
-				// 高清的压缩图片全部就在 list 路径里面了
-				// 高清的压缩过的 bmp 对象 都在 Bimp.bmp里面
-				// 完成上传服务器后 .........
-				FileUtils.deleteDir();
+				String text = newPostEt.getText().toString();
+				newpostTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, text);
+
 			}
 		});
 	}
+	static class postreplycls {
+		String result;
+		String id;
+		public String getResult() {
+			return result;
+		}
+		public void setResult(String result) {
+			this.result = result;
+		}
+		public String getId() {
+			return id;
+		}
+		public void setId(String id) {
+			this.id = id;
+		}
+	}
+	private AsyncTask<String,Void,String> newpostTask = new AsyncTask<String,Void,String>(){
+
+		@Override
+		protected String doInBackground(String... params) {
+			List<String> list = new ArrayList<String>();
+			HttpClient httpClient = new DefaultHttpClient();
+			HttpPost post = new HttpPost("http://ppzimg.daoapp.io/upload");
+			for (int i = 0; i < Bimp.drr.size(); i++) {
+				String Str = Bimp.drr.get(i).substring(
+						Bimp.drr.get(i).lastIndexOf("/") + 1,
+						Bimp.drr.get(i).lastIndexOf("."));
+				String postfix = Bimp.drr.get(i).substring(Bimp.drr.get(i).lastIndexOf('.') + 1);
+				//list.add(FileUtils.SDPATH + Str + ".JPEG");
+				FileEntity entity = new FileEntity(new File(Bimp.drr.get(i)),
+						postfix);
+				post.setEntity(entity);
+				post.setHeader("Content-type", postfix);
+				HttpResponse response = null;
+				String content = null;
+				try {
+					response = httpClient.execute(post);
+					content = EntityUtils.toString(response.getEntity());
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				String id = content.substring(content.indexOf("md5")+6,content.indexOf("size")-3);
+				//postreplycls result = FastjsonUtil.json2object(content, postreplycls.class);
+				Log.d("=====",id);
+				list.add("http://ppzimg.daoapp.io/upload"+id);
+
+			}
+			
+	        HttpPost httppost = new HttpPost("http://moments.daoapp.io/api/v1.0/posts/");
+	        httppost.setHeader("Authorization", "Basic " + encoding);
+	
+	        JSONObject jsonParam = new JSONObject();
+	        JSONArray array = new JSONArray();
+	        array.addAll(list);
+	        
+	        jsonParam.put("content", params[0]);// 标题
+	        jsonParam.put("urls", array);
+	
+	        StringEntity entity = null;
+			try {
+				entity = new StringEntity(jsonParam.toString(), "utf-8");
+			} catch (UnsupportedEncodingException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}// 解决中文乱码问题
+	        entity.setContentEncoding("UTF-8");
+	        entity.setContentType("application/json");
+	        httppost.setEntity(entity);
+	        System.out.println("executing request " + httppost.getRequestLine());
+	
+	        HttpResponse response = null;
+	        String postid = null ;
+			try {
+				response = httpClient.execute(httppost);
+				
+				HttpEntity ret = response.getEntity();
+				String str = EntityUtils.toString(ret);
+				postreplycls result = FastjsonUtil.json2object(
+						str, postreplycls.class);
+				postid = result.id;
+				Log.d("=====",postid + "");
+
+			}catch (ParseException  e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+	        }catch(IOException e){
+	        	e.printStackTrace();
+	        }
+			// 高清的压缩图片全部就在 list 路径里面了
+			// 高清的压缩过的 bmp 对象 都在 Bimp.bmp里面
+			// 完成上传服务器后 .........
+			FileUtils.deleteDir();
+			return postid;
+		}
+	    protected void onPostExecute(String result) {
+	    	finish();
+	    }
+		
+		
+	};
 
 	@SuppressLint("HandlerLeak")
 	public class GridAdapter extends BaseAdapter
