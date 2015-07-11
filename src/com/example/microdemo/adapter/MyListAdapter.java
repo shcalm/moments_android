@@ -1,40 +1,32 @@
 package com.example.microdemo.adapter;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 
-import android.R.integer;
-import android.app.AlertDialog;
-import android.content.Context;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.ParseException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.text.Html;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.TextUtils;
-import android.text.style.ImageSpan;
+import android.util.Base64;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
-import android.view.Window;
-import android.view.WindowManager;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -42,17 +34,20 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.example.microdemo.ImagePagerActivity;
 import com.example.microdemo.MainActivity;
 import com.example.microdemo.R;
 import com.example.microdemo.domain.FirendMicroListDatas;
 import com.example.microdemo.domain.FirstMicroListDatasFirendcomment;
-import com.example.microdemo.domain.FirstMicroListDatasFirendpraise;
+import com.example.microdemo.util.FastjsonUtil;
 import com.example.microdemo.util.MyCustomDialog;
 //import com.loveplusplus.demo.image.ImagePagerActivity;
 //import com.loveplusplus.demo.image.MyGridAdapter;
 //import com.loveplusplus.demo.image.NoScrollGridView;
-import com.example.microdemo.adapter.MyGridAdapter;
+import com.example.testpic.PublishedActivity.postreplycls;
+
 
 public class MyListAdapter extends BaseAdapter {
 
@@ -76,10 +71,13 @@ public class MyListAdapter extends BaseAdapter {
 	private List<FirendMicroListDatas> mList = new ArrayList<FirendMicroListDatas>();// json数据
 	private FirendMicroListDatas bean = new FirendMicroListDatas();// 总的实体类
 	private List<FirstMicroListDatasFirendcomment> fConnent = new ArrayList<FirstMicroListDatasFirendcomment>();// 评论
-	private List<FirstMicroListDatasFirendpraise> friendpraise = new ArrayList<FirstMicroListDatasFirendpraise>();// 点赞
+	private List<String> friendpraise = new ArrayList<String>();// 点赞
 	private FirstMicroListDatasFirendcomment f = new FirstMicroListDatasFirendcomment();// 评论完了暂时存到这里
 	private boolean submitflag = false;// 提交状态，如果某条消息评论，点赞状态有更新，则置true，否则为false
-
+	static String encoding = null; 
+	static{
+		encoding = Base64.encodeToString(new String("123:e10adc3949ba59abbe56e057f20f883e").getBytes(), Base64.NO_WRAP);
+	}
 	// String obSid="";//sid表示消息的id
 	String sImages = "";
 	int indexOf = -1;
@@ -172,7 +170,8 @@ public class MyListAdapter extends BaseAdapter {
 						@Override
 						public void onItemClick(AdapterView<?> parent,
 								View view, int position, long id) {
-							imageBrower(position, bean.urls);
+							String[] urls =  ((MyGridAdapter)(parent.getAdapter())).getAllUrls();
+							imageBrower(position, urls);
 						}
 					});
 		} else {
@@ -185,7 +184,7 @@ public class MyListAdapter extends BaseAdapter {
 		 * 显示时间 服务器返回的时间是：年-月-日 时：分，所以获取的时候应该是yyyy-MM-dd HH:mm
 		 */
 		String strTime = bean.getSendtime().trim();
-		
+		Log.d("=========","strTime" +strTime);
 		if (!"".equals(strTime)) {
 			SimpleDateFormat sDateFormat = new SimpleDateFormat(
 					"yyyy-MM-dd HH:mm");
@@ -232,10 +231,10 @@ public class MyListAdapter extends BaseAdapter {
 
 				// obSid=holder.btnComment.getTag().toString();
 				praise = false;
-				for (FirstMicroListDatasFirendpraise p : getItem(position)
+				for (String p : getItem(position)
 						.getFriendpraise()) {
 					if (null != p) {
-						if (p.getUname().equals(
+						if (p.equals(
 								mContext.ownerdata.getOwnername())) {
 							praise = true;
 							break;
@@ -323,9 +322,9 @@ public class MyListAdapter extends BaseAdapter {
 
 			StringBuffer uName = new StringBuffer();
 			uName.append(" ");
-			for (FirstMicroListDatasFirendpraise p : friendpraise) {
+			for (String p : friendpraise) {
 				if (null != p) {
-					uName.append(p.getUname() + " ,");
+					uName.append(p + " ,");
 				}
 			}
 			uName.deleteCharAt(uName.length() - 1);
@@ -412,9 +411,70 @@ public class MyListAdapter extends BaseAdapter {
 		Log.i(TAG, "content->" + content);
 		Toast.makeText(mContext, "提交评论", 0).show();
 		getItem(position).setFriendcomment(friendcomment_temp);
+		
+		new Thread(new Runnable(){
+
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				HttpClient httpClient = new DefaultHttpClient();
+				HttpPost httppost = new HttpPost(
+				        "http://moments.daoapp.io/api/v1.0/posts/");
+				httppost.setHeader("Authorization", "Basic " + encoding);
+
+				JSONObject jsonParam = new JSONObject();
+				JSONArray array = new JSONArray();
+
+				jsonParam.put("comment", content);// 标题
+				jsonParam.put("isreplyname", isreplyname);
+
+				StringEntity entity = null;
+				try {
+					entity = new StringEntity(jsonParam.toString(), "utf-8");
+				} catch (UnsupportedEncodingException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				entity.setContentEncoding("UTF-8");
+				entity.setContentType("application/json");
+				httppost.setEntity(entity);
+				System.out.println("executing request "
+				        + httppost.getRequestLine());
+
+				HttpResponse response = null;
+				String postid = null;
+				try {
+					response = httpClient.execute(httppost);
+
+					HttpEntity ret = response.getEntity();
+					String str = EntityUtils.toString(ret);
+					Log.d("=====", str  + " str = ");
+
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+			}
+			
+		}).start();
+		
+		
+		
 		notifyDataSetChanged(); // 提交之后刷新页面，以便及时显示
 	}
 
+	
+	class mythread extends Thread{
+		String id;
+		public mythread(Runnable runnable,String id){
+			super(runnable);
+			this.id = id;
+		}
+		
+	}
 	/**
 	 * 点赞 praise:是否已经点赞了
 	 * true:已经点赞了，这样textView上面应该显示“取消”；false:没有点赞，textView上面应该显示“点赞”；默认为false
@@ -433,13 +493,13 @@ public class MyListAdapter extends BaseAdapter {
 	private void submitPraise(int position, String uid, String uname) {
 
 		// TODO Auto-generated method stub
-		FirstMicroListDatasFirendpraise p = new FirstMicroListDatasFirendpraise();
-		List<FirstMicroListDatasFirendpraise> friendpraise_temp;
+		//FirstMicroListDatasFirendpraise p = new FirstMicroListDatasFirendpraise();
+		List<String> friendpraise_temp;
 		submitflag = true;
 		int count_temp = 0;
 		friendpraise_temp = getItem(position).getFriendpraise();
-		p.setUname(mContext.ownerdata.getOwnername());
-		p.setUid(mContext.ownerdata.getOwnerid());
+		String p = mContext.ownerdata.getOwnername();
+
 		// p.setId(id);
 		if (praise) {
 			count_temp = friendpraise_temp.size();
@@ -454,6 +514,39 @@ public class MyListAdapter extends BaseAdapter {
 			Toast.makeText(mContext, "点赞", 0).show();
 		}
 		getItem(position).setFriendpraise(friendpraise_temp);
+		FirendMicroListDatas data = getItem(position);
+		new mythread(new Runnable(){
+
+			@Override
+            public void run() {
+				HttpClient httpClient = new DefaultHttpClient();
+				//FirendMicroListDatas data = getItem(position);
+				HttpPost httppost = new HttpPost(
+				        "http://moments.daoapp.io/api/v1.0/posts/" + id
+				                + "/praise");
+				httppost.setHeader("Authorization", "Basic " + encoding);
+				System.out.println("executing request " + httppost.getRequestLine());
+
+				HttpResponse response = null;
+				String postid = null;
+				try {
+					response = httpClient.execute(httppost);
+
+					HttpEntity ret = response.getEntity();
+					String str = EntityUtils.toString(ret);
+					Log.d("====", "reply = " + str);
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+	            
+            }
+			
+		},data.getId()).start();
+
+
 		notifyDataSetChanged(); // 提交之后刷新页面，以便及时显示
 	}
 

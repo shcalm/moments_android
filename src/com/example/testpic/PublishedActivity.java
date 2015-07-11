@@ -162,7 +162,7 @@ public class PublishedActivity extends Activity
 				String id = content.substring(content.indexOf("md5")+6,content.indexOf("size")-3);
 				//postreplycls result = FastjsonUtil.json2object(content, postreplycls.class);
 				Log.d("=====",id);
-				list.add("http://ppzimg.daoapp.io/upload"+id);
+				list.add("http://ppzimg.daoapp.io/"+id);
 
 			}
 			

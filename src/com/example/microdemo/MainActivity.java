@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -46,77 +48,79 @@ import android.widget.ImageView;
 public class MainActivity extends Activity {
 
 	private static final String TAG = "MicroActivity";
-	private String uid="";
-	private String companykey="";
+	private String uid = "";
+	private String companykey = "";
 	int now = 0;
-	int count = 0;
-	private String strIcon="";
-	List<FirendMicroListDatas> listdatas=new ArrayList<FirendMicroListDatas>();
+	int count = 1;
+	private String strIcon = "";
+	List<FirendMicroListDatas> listdatas = new ArrayList<FirendMicroListDatas>();
+	
 	private View header;
 	public CustomListView listview;
-	public ImageButton selectpic;	
+	public ImageButton selectpic;
 	public MyListAdapter mAdapter;
 	public OwnerMicro ownerdata;
 	private ImageView MicroIcon;
-	String res="";
-	String ownerres="";
-	static String encoding = null; 
-	static{
-		encoding = Base64.encodeToString(new String("123:e10adc3949ba59abbe56e057f20f883e").getBytes(), Base64.NO_WRAP);
+	String res = "";
+	String ownerres = "";
+	static String encoding = null;
+	static {
+		encoding = Base64.encodeToString(new String(
+		        "123:e10adc3949ba59abbe56e057f20f883e").getBytes(),
+		        Base64.NO_WRAP);
 	}
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
+
 		try {
 
-			InputStream owner=getResources().openRawResource(R.raw.ownerjson);
-			int ownerlength=owner.available();
-			byte[] ownerbuffer=new byte[ownerlength];
+			InputStream owner = getResources().openRawResource(R.raw.ownerjson);
+			int ownerlength = owner.available();
+			byte[] ownerbuffer = new byte[ownerlength];
 			owner.read(ownerbuffer);
-			ownerres=EncodingUtils.getString(ownerbuffer, "UTF-8");
-			owner.close();			
-			
+			ownerres = EncodingUtils.getString(ownerbuffer, "UTF-8");
+			owner.close();
 
-			InputStream in=getResources().openRawResource(R.raw.json);
+			InputStream in = getResources().openRawResource(R.raw.json);
 
-			int length=in.available();
-			
-			byte[] buffer=new byte[length];
-			
+			int length = in.available();
+
+			byte[] buffer = new byte[length];
 
 			in.read(buffer);
-			
 
-			res=EncodingUtils.getString(buffer, "UTF-8");
-			
+			res = EncodingUtils.getString(buffer, "UTF-8");
+
 			in.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} 
-		
+		}
+
 		init();
 	}
-	
+
 	private void init() {
-		
-		selectpic=(ImageButton)findViewById(R.id.ib_right);
+
+		selectpic = (ImageButton) findViewById(R.id.ib_right);
 		selectpic.setOnClickListener(new OnClickListener() {
-			
+
 			@Override
 			public void onClick(View paramView) {
-		
-				Intent intent = new Intent(MainActivity.this, PublishedActivity.class);
+
+				Intent intent = new Intent(MainActivity.this,
+				        PublishedActivity.class);
 				startActivity(intent);
 			}
 		});
-		
-		
-		header=LayoutInflater.from(this).inflate(R.layout.micro_list_header, null);
-		MicroIcon=(ImageView) header.findViewById(R.id.MicroIcon);
-		listview=(CustomListView) findViewById(R.id.list);
+
+		header = LayoutInflater.from(this).inflate(R.layout.micro_list_header,
+		        null);
+		MicroIcon = (ImageView) header.findViewById(R.id.MicroIcon);
+		listview = (CustomListView) findViewById(R.id.list);
 		listview.setVerticalScrollBarEnabled(false);
 		listview.setDivider(this.getResources().getDrawable(R.drawable.h_line));
 		listview.addHeaderView(header);
@@ -124,93 +128,95 @@ public class MainActivity extends Activity {
 		mAdapter = new MyListAdapter(this, listdatas);
 		listview.setAdapter(mAdapter);
 		getOwnerList();
-		getMicroList(0, true);
-		
+		getMicroList(1, true);
+
 		listview.setOnRefreshListener(new OnRefreshListener() {
-			
+
 			@Override
 			public void onRefresh() {
 				// TODO Auto-generated method stub
-				String s="下拉刷新";
+				String s = "下拉刷新";
 				getData(s);
 			}
-			
+
 		});
 
 		listview.setOnLoadListener(new OnLoadMoreListener() {
 
 			public void onLoadMore() {
-				String s="上拉加载更多";
+				String s = "上拉加载更多";
 				getData(s);
-				
+
 			}
 		});
 	}
 
-	private void getOwnerList(){
-		if(TextUtils.isEmpty(ownerres)){
-			return;	
+	private void getOwnerList() {
+		if (TextUtils.isEmpty(ownerres)) {
+			return;
 		}
 
-		ownerdata=FastjsonUtil.json2object(ownerres, OwnerMicro.class);
+		ownerdata = FastjsonUtil.json2object(ownerres, OwnerMicro.class);
 	}
-	
-	
-	
+
 	private void getMicroList(final int i, boolean has) {
-		if(TextUtils.isEmpty(res)){
-			return;	
+		if (TextUtils.isEmpty(res)) {
+			return;
 		}
-		new AsyncTask<String,Void,String>(){
+		new AsyncTask<String, Void, String>() {
 			@Override
-		    protected void onPostExecute(String result) {
-				
-				FirendsMicro fm=FastjsonUtil.json2object(result, FirendsMicro.class);
-				FirendMicroList fList=fm.getFriendPager();
-				
+			protected void onPostExecute(String result) {
+				int firstpage = 1;
+				FirendsMicro fm = FastjsonUtil.json2object(result,
+				        FirendsMicro.class);
+				FirendMicroList fList = fm.getFriendPager();
+
 				{
-					
-					if(i==0){
+
+					if (i == firstpage) {
 						listdatas.clear();
-						count=0;
+						count = 1;
 					}
-					
-					if(null ==fList.getDatas() || fList.getDatas().size()==0){
-						if(i==0){
+
+					if (null == fList.getDatas()
+					        || fList.getDatas().size() == 0) {
+						if (i == firstpage) {
 							listview.onRefreshComplete();
-						}else{
+						} else {
 							listview.onLoadMoreComplete(false);
 						}
-					}else{
-						if(i==0){
+					} else {
+						if (i == firstpage) {
 							listview.onRefreshComplete();
-						}else{
+						} else {
 							listview.onLoadMoreComplete();
 						}
 						listdatas.addAll(fList.getDatas());
 						count++;
 					}
-					int k=listdatas.size();
-					now=k>0?k-1:0;
+					int k = listdatas.size();
+					now = k > 0 ? k - 1 : 0;
 					mAdapter.notifyDataSetChanged();
-		    }
-			
-		}
+				}
+
+			}
+
 			@Override
 			protected String doInBackground(String... params) {
 				HttpClient client = new DefaultHttpClient();
-				
+
 				HttpGet httpget = new HttpGet(params[0]);
-				//HttpPost httppost = new HttpPost("http://moments.daoapp.io/api/v1.0/posts/");
-				httpget.setHeader("user-agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:23.0) Gecko/20100101 Firefox/23.0");
+				// HttpPost httppost = new
+				// HttpPost("http://moments.daoapp.io/api/v1.0/posts/");
+				httpget.setHeader("user-agent",
+				        "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:23.0) Gecko/20100101 Firefox/23.0");
 				httpget.setHeader("Authorization", "Basic " + encoding);
-				
-				
+
 				String result = null;
 				try {
 					HttpResponse response = client.execute(httpget);
 					result = EntityUtils.toString(response.getEntity());
-					Log.d("====","result = " + result);
+					Log.d("====", "result = " + result);
 				} catch (ClientProtocolException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -220,26 +226,26 @@ public class MainActivity extends Activity {
 				}
 				return result;
 			}
-			}.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "http://moments.daoapp.io/api/v1.0/posts/");
-		
-		
+		}.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
+		        "http://moments.daoapp.io/api/v1.0/posts/?page="+i);
+
 	}
-	
+
 	private void getData(String s) {
-		
-		if("下拉刷新".equals(s)){
-			
-			getMicroList(0, true);
-			
+
+		if ("下拉刷新".equals(s)) {
+
+			getMicroList(1, true);
+
 			listview.onRefreshComplete();
-		}else{
-			getMicroList(now, true);
-			
+		} else {
+			getMicroList(count, true);
+
 			listview.onLoadMoreComplete(); // 加载更多完成
 		}
 	}
-	
-	public void LoadList(){
-		getMicroList(0, true);
+
+	public void LoadList() {
+		getMicroList(1, true);
 	}
 }

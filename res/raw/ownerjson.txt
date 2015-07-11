@@ -1,1 +1,1 @@
-﻿{"ownerid":"36","ownername":"赵六","owneravatar":"123","ownergroupid":"129","ownerselect":["123","345"]}
+﻿{"ownerid":"1","ownername":"123","owneravatar":"123","ownergroupid":"129","ownerselect":["123","345"]}

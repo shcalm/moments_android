@@ -22,6 +22,10 @@ public class MyGridAdapter extends BaseAdapter {
 		mLayoutInflater = LayoutInflater.from(context);
 	}
 
+	
+	public String[] getAllUrls(){
+		return files;
+	}
 	@Override
 	public int getCount() {
 		return files == null ? 0 : files.length;

@@ -18,7 +18,7 @@ public class FirendMicroListDatas extends MyBaseBean{
 		this.usericon = usericon;
 	}
 	private List<FirstMicroListDatasFirendcomment> friendcomment;//评论
-	private List<FirstMicroListDatasFirendpraise> friendpraise;//点赞
+	private List<String> friendpraise;//点赞
 
 	public String getId() {
 		return id;
@@ -57,10 +57,10 @@ public class FirendMicroListDatas extends MyBaseBean{
 			List<FirstMicroListDatasFirendcomment> friendcomment) {
 		this.friendcomment = friendcomment;
 	}
-	public List<FirstMicroListDatasFirendpraise> getFriendpraise() {
+	public List<String> getFriendpraise() {
 		return friendpraise;
 	}
-	public void setFriendpraise(List<FirstMicroListDatasFirendpraise> friendpraise) {
+	public void setFriendpraise(List<String> friendpraise) {
 		this.friendpraise = friendpraise;
 	}
 }
