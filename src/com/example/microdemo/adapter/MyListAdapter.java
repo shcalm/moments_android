@@ -46,7 +46,7 @@ import com.example.microdemo.util.MyCustomDialog;
 //import com.loveplusplus.demo.image.ImagePagerActivity;
 //import com.loveplusplus.demo.image.MyGridAdapter;
 //import com.loveplusplus.demo.image.NoScrollGridView;
-import com.example.testpic.PublishedActivity.postreplycls;
+
 
 
 public class MyListAdapter extends BaseAdapter {
@@ -399,6 +399,7 @@ public class MyListAdapter extends BaseAdapter {
 		List<FirstMicroListDatasFirendcomment> friendcomment_temp;
 		submitflag = true;
 		friendcomment_temp = getItem(position).getFriendcomment();
+		final String id = getItem(position).getId();
 		p.setReplyId(mContext.ownerdata.getOwnerid());
 		p.setReplyName(mContext.ownerdata.getOwnername());
 		// p.setId(id);
@@ -419,7 +420,7 @@ public class MyListAdapter extends BaseAdapter {
 				// TODO Auto-generated method stub
 				HttpClient httpClient = new DefaultHttpClient();
 				HttpPost httppost = new HttpPost(
-				        "http://moments.daoapp.io/api/v1.0/posts/");
+				        "http://moments.daoapp.io/api/v1.0/posts/" + id+"/comments/");
 				httppost.setHeader("Authorization", "Basic " + encoding);
 
 				JSONObject jsonParam = new JSONObject();
