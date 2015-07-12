@@ -38,6 +38,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.example.microdemo.ImagePagerActivity;
 import com.example.microdemo.MainActivity;
+import com.example.microdemo.MyApplication;
 import com.example.microdemo.R;
 import com.example.microdemo.domain.FirendMicroListDatas;
 import com.example.microdemo.domain.FirstMicroListDatasFirendcomment;
@@ -74,10 +75,7 @@ public class MyListAdapter extends BaseAdapter {
 	private List<String> friendpraise = new ArrayList<String>();// 点赞
 	private FirstMicroListDatasFirendcomment f = new FirstMicroListDatasFirendcomment();// 评论完了暂时存到这里
 	private boolean submitflag = false;// 提交状态，如果某条消息评论，点赞状态有更新，则置true，否则为false
-	static String encoding = null; 
-	static{
-		encoding = Base64.encodeToString(new String("123:e10adc3949ba59abbe56e057f20f883e").getBytes(), Base64.NO_WRAP);
-	}
+
 	// String obSid="";//sid表示消息的id
 	String sImages = "";
 	int indexOf = -1;
@@ -421,7 +419,7 @@ public class MyListAdapter extends BaseAdapter {
 				HttpClient httpClient = new DefaultHttpClient();
 				HttpPost httppost = new HttpPost(
 				        "http://moments.daoapp.io/api/v1.0/posts/" + id+"/comments/");
-				httppost.setHeader("Authorization", "Basic " + encoding);
+				httppost.setHeader("Authorization", "Basic " + MyApplication.getBase64Code());
 
 				JSONObject jsonParam = new JSONObject();
 				JSONArray array = new JSONArray();
@@ -525,7 +523,7 @@ public class MyListAdapter extends BaseAdapter {
 				HttpPost httppost = new HttpPost(
 				        "http://moments.daoapp.io/api/v1.0/posts/" + id
 				                + "/praise");
-				httppost.setHeader("Authorization", "Basic " + encoding);
+				httppost.setHeader("Authorization", "Basic " + MyApplication.getBase64Code());
 				System.out.println("executing request " + httppost.getRequestLine());
 
 				HttpResponse response = null;

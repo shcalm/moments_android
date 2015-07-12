@@ -30,6 +30,7 @@ import com.example.testpic.PublishedActivity;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources.NotFoundException;
 import android.text.TextUtils;
@@ -63,13 +64,14 @@ public class MainActivity extends Activity {
 	private ImageView MicroIcon;
 	String res = "";
 	String ownerres = "";
-	static String encoding = null;
-	static {
-		encoding = Base64.encodeToString(new String(
-		        "123:e10adc3949ba59abbe56e057f20f883e").getBytes(),
-		        Base64.NO_WRAP);
-	}
 
+
+	public static void lauchThis(Context ctx){
+		Intent i = new Intent();
+		i.setClassName(ctx, "com.example.microdemo.MainActivity");
+		ctx.startActivity(i);
+	}
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -210,7 +212,7 @@ public class MainActivity extends Activity {
 				// HttpPost("http://moments.daoapp.io/api/v1.0/posts/");
 				httpget.setHeader("user-agent",
 				        "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:23.0) Gecko/20100101 Firefox/23.0");
-				httpget.setHeader("Authorization", "Basic " + encoding);
+				httpget.setHeader("Authorization", "Basic " + MyApplication.getBase64Code());
 
 				String result = null;
 				try {

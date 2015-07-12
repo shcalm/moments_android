@@ -18,6 +18,7 @@ import org.apache.http.util.EntityUtils;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.example.microdemo.MyApplication;
 import com.example.microdemo.R;
 import com.example.microdemo.util.FastjsonUtil;
 
@@ -66,10 +67,7 @@ public class PublishedActivity extends Activity
 	private GridAdapter adapter;
 	private TextView activity_selectimg_send;
 	private EditText newPostEt;
-	static String encoding = null; 
-	static{
-		encoding = Base64.encodeToString(new String("123:e10adc3949ba59abbe56e057f20f883e").getBytes(), Base64.NO_WRAP);
-	}
+
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
@@ -167,7 +165,7 @@ public class PublishedActivity extends Activity
 			}
 			
 	        HttpPost httppost = new HttpPost("http://moments.daoapp.io/api/v1.0/posts/");
-	        httppost.setHeader("Authorization", "Basic " + encoding);
+	        httppost.setHeader("Authorization", "Basic " + MyApplication.getBase64Code());
 	
 	        JSONObject jsonParam = new JSONObject();
 	        JSONArray array = new JSONArray();

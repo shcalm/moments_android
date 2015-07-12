@@ -1,12 +1,15 @@
 package com.example.microdemo;
 
 import android.app.Application;
+import android.util.Base64;
 
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 public class MyApplication extends Application {
+
+	static String encoding = null;
 
 	@Override
 	public void onCreate() {
@@ -26,5 +29,19 @@ public class MyApplication extends Application {
 				.writeDebugLogs()
 				.build();
 		ImageLoader.getInstance().init(config);
+	}
+	
+	public static String getBase64Code(){
+		return encoding;
+	}
+	public static void  setBase64Code(String username,String password){
+		encoding = Base64.encodeToString(new String(
+				username+":"+password).getBytes(),
+		        Base64.NO_WRAP);
+		
+	}	
+	public static void  setBase64Code(String encode){
+		encoding = encode;
+		
 	}
 }
