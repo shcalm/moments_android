@@ -426,6 +426,7 @@ public class MyListAdapter extends BaseAdapter {
 
 				jsonParam.put("comment", content);// 标题
 				jsonParam.put("isreplyname", isreplyname);
+				jsonParam.put("timestamp", new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()));
 
 				StringEntity entity = null;
 				try {

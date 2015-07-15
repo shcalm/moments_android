@@ -3,7 +3,9 @@ package com.example.testpic;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.http.HttpEntity;
@@ -173,7 +175,7 @@ public class PublishedActivity extends Activity
 	        
 	        jsonParam.put("content", params[0]);// 标题
 	        jsonParam.put("urls", array);
-	
+	        jsonParam.put("timestamp", new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()));
 	        StringEntity entity = null;
 			try {
 				entity = new StringEntity(jsonParam.toString(), "utf-8");
