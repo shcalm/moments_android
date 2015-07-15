@@ -467,12 +467,37 @@ public class MyListAdapter extends BaseAdapter {
 	}
 
 	
-	class mythread extends Thread{
-		String id;
-		public mythread(Runnable runnable,String id){
-			super(runnable);
-			this.id = id;
+	class myRunnable implements Runnable{
+		String itemid;
+		public myRunnable(String id){
+			this.itemid = id;
 		}
+		@Override
+        public void run() {
+			HttpClient httpClient = new DefaultHttpClient();
+			//FirendMicroListDatas data = getItem(position);
+			HttpPost httppost = new HttpPost(
+			        "http://moments.daoapp.io/api/v1.0/posts/" + itemid
+			                + "/praise");
+			httppost.setHeader("Authorization", "Basic " + MyApplication.getBase64Code());
+			System.out.println("executing request " + httppost.getRequestLine());
+
+			HttpResponse response = null;
+			String postid = null;
+			try {
+				response = httpClient.execute(httppost);
+
+				HttpEntity ret = response.getEntity();
+				String str = EntityUtils.toString(ret);
+				Log.d("====", "reply = " + str);
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+            
+        }
 		
 	}
 	/**
@@ -515,37 +540,8 @@ public class MyListAdapter extends BaseAdapter {
 		}
 		getItem(position).setFriendpraise(friendpraise_temp);
 		FirendMicroListDatas data = getItem(position);
-		new mythread(new Runnable(){
 
-			@Override
-            public void run() {
-				HttpClient httpClient = new DefaultHttpClient();
-				//FirendMicroListDatas data = getItem(position);
-				HttpPost httppost = new HttpPost(
-				        "http://moments.daoapp.io/api/v1.0/posts/" + id
-				                + "/praise");
-				httppost.setHeader("Authorization", "Basic " + MyApplication.getBase64Code());
-				System.out.println("executing request " + httppost.getRequestLine());
-
-				HttpResponse response = null;
-				String postid = null;
-				try {
-					response = httpClient.execute(httppost);
-
-					HttpEntity ret = response.getEntity();
-					String str = EntityUtils.toString(ret);
-					Log.d("====", "reply = " + str);
-				} catch (ParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-	            
-            }
-			
-		},data.getId()).start();
-
+		new Thread(new myRunnable(data.getId())).start();
 
 		notifyDataSetChanged(); // 提交之后刷新页面，以便及时显示
 	}
